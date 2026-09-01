@@ -1,9 +1,9 @@
 {
   "id": "spacexai",
   "kind": "plugin",
-  "version": "1.0.5",
+  "version": "1.1.0",
   "label": "SpaceXAI",
-  "description": "SpaceXAI (Grok) API for Settings → LLMs. Install from Store → Gateways, then enable to show SpaceXAI under Providers & Keys.",
+  "description": "SpaceXAI (Grok) API plus the official Grok Build coding agent. Adds SpaceXAI under Providers & Keys and Grok Build under Coding Agents.",
   "min_app_version": "1.0.523",
   "default_enabled": true,
   "secret_keys": [
@@ -19,16 +19,23 @@
         "order": 42
       }
     ],
+    "llm.coding_agents": [
+      {
+        "id": "grok_build",
+        "label": "Grok Build",
+        "order": 140
+      }
+    ],
     "walkthrough": {
       "id": "spacexai",
-      "title": "Set up SpaceXAI",
+      "title": "Set up SpaceXAI and Grok Build",
       "auto_start": "first_enable",
       "settings_tab": "LLMs",
       "steps": [
         {
           "target": "settings.llms.section.llms",
           "title": "Providers & Keys",
-          "body": "SpaceXAI lives under Settings → LLMs. Open Providers & Keys to paste your API key from console.x.ai.",
+          "body": "Paste a SpaceXAI key under Providers & Keys, or sign in with `grok login`. Grok Build appears under Coding Agents after the official CLI is installed.",
           "advance": "require_click",
           "mode": "rect"
         }

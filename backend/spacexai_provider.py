@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import json
-from typing import Any, AsyncIterator
+from collections.abc import AsyncIterator
+from typing import Any
 
 from backend.agent.multimodal_content import build_openai_user_content
 from backend.agent.prompt_cache import PromptCachePayload
@@ -13,7 +14,10 @@ from backend.agent.providers.base import (
     StreamEventKind,
     ToolCallRequest,
 )
-from backend.agent.providers.cache_utils import openai_system_messages, parse_openai_usage
+from backend.agent.providers.cache_utils import (
+    openai_system_messages,
+    parse_openai_usage,
+)
 from backend.agent.providers.thinking import ThinkSplitter, reasoning_from_delta
 
 SPACEXAI_BASE_URL = "https://api.x.ai/v1"
@@ -171,5 +175,5 @@ class SpaceXAIProvider:
             )
             _ = r.choices[0].message.content
             return True, "SpaceXAI OK"
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001 - key test must surface any SDK/network failure
             return False, str(e)
