@@ -48,8 +48,13 @@ def test_build_grok_argv_uses_installed_cli_default() -> None:
         "--approve-all",
         "--yes",
         "--yolo",
+        "--full-auto",
         "--dangerously-skip-permissions",
         "--allow-all",
+        "--permission-mode bypassPermissions",
+        "--permission-mode dontAsk",
+        "--permission-mode auto",
+        "--permission-mode=bypassPermissions",
     ],
 )
 def test_build_grok_argv_rejects_session_transport_overrides(extra: str) -> None:

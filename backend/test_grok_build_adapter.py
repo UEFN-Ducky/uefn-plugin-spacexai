@@ -289,6 +289,8 @@ def test_launch_runs_full_acp_turn_with_mcp_permission_and_usage(
     assert _request(records, "authenticate")["params"]["methodId"] == "xai.api_key"
     new_session = _request(records, "session/new")["params"]
     assert new_session["_meta"]["sessionKind"] == "headless"
+    assert new_session["_meta"]["yoloMode"] is False
+    assert new_session["_meta"]["autoMode"] is False
     assert new_session["mcpServers"][0]["name"] == "uefn"
     assert new_session["mcpServers"][0]["env"] == [
         {"name": "DUCKY_CONV_ID", "value": "chat-1"}

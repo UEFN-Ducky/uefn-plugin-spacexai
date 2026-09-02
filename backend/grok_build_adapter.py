@@ -793,6 +793,8 @@ class GrokBuildAdapter:
                         "_meta": {
                             "sessionKind": "headless",
                             "clientIdentifier": "uefn-ducky",
+                            "yoloMode": False,
+                            "autoMode": False,
                         },
                     },
                     deadline=_deadline(turn_deadline, _HANDSHAKE_TIMEOUT_S),

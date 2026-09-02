@@ -113,6 +113,8 @@ def _validated_extra_args(raw: str) -> list[str]:
         "--resume",
         "-r",
         "--cwd",
+        "--permission-mode",
+        "--permissions-mode",
     }
     forbidden_flags = {
         "--no-auto-update",
@@ -124,8 +126,11 @@ def _validated_extra_args(raw: str) -> list[str]:
         "--approve-all",
         "--yes",
         "--yolo",
+        "--full-auto",
         "--dangerously-skip-permissions",
         "--allow-all",
+        "--permission-mode",
+        "--permissions-mode",
     }
     forbidden_commands = {"agent", "stdio", "headless", "serve", "leader"}
     out: list[str] = []
