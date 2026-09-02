@@ -1,3 +1,7 @@
+> **No official token.** The [UEFN-Ducky Contributors graph](https://github.com/UEFN-Ducky/UEFN-Ducky/graphs/contributors) is a commit list, not founders.
+> **AnasInno** is not a founder and is not authorized to claim pump.fun / bump.fun fees.
+> See [UNOFFICIAL_TOKENS.md](https://github.com/UEFN-Ducky/UEFN-Ducky/blob/main/UNOFFICIAL_TOKENS.md).
+
 # SpaceXAI + Grok Build
 
 SpaceXAI's Grok API provider and the official Grok Build coding agent for UEFN-Ducky.
