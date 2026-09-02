@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """Zip plugin.json + backend (+ assets) for Store upload. No secrets."""
 
 from __future__ import annotations
@@ -8,10 +9,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT_DIR = ROOT / "deploy"
-PACK_ROOTS = {"plugin.json", "LICENSE", "backend", "assets"}
-SKIP_PARTS = {"__pycache__", ".pytest_cache", ".ruff_cache"}
+SKIP_NAMES = {".git", "scripts", "deploy", ".gitignore", "README.md", "__pycache__", ".pytest_cache"}
 SKIP_SUFFIX = {".pyc", ".pyo", ".zip", ".ducky-plugin"}
-SKIP_FILES = {"conftest.py"}
 
 
 def build_zip(*, out: Path | None = None) -> Path:
@@ -31,16 +30,9 @@ def build_zip(*, out: Path | None = None) -> Path:
             if not path.is_file():
                 continue
             rel_parts = path.relative_to(ROOT).parts
-            if not rel_parts or rel_parts[0] not in PACK_ROOTS:
+            if not rel_parts or rel_parts[0] in SKIP_NAMES:
                 continue
-            if any(part.startswith(".") or part in SKIP_PARTS for part in rel_parts):
-                continue
-            if (
-                path.suffix.lower() in SKIP_SUFFIX
-                or path.name.startswith(".")
-                or path.name.startswith("test_")
-                or path.name in SKIP_FILES
-            ):
+            if path.suffix.lower() in SKIP_SUFFIX or path.name.startswith("."):
                 continue
             zf.write(path, arcname="/".join(rel_parts))
     print(f"wrote {dest} ({dest.stat().st_size} bytes)")

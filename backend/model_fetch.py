@@ -83,7 +83,7 @@ def _fetch_spacexai(api_key: str) -> list[ModelInfo]:
             if mid:
                 models.append(_info_from_id(mid))
         models.sort(key=lambda m: m.id)
-    except Exception as exc:  # noqa: BLE001 - OpenAI SDK / network surface is wide
+    except Exception as exc:
         _log.warning("SpaceXAI /v1/models unavailable: %s", exc)
         models = _fallback_models()
 
