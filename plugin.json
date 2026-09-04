@@ -1,7 +1,7 @@
 {
   "id": "spacexai",
   "kind": "plugin",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "label": "SpaceXAI",
   "description": "SpaceXAI (Grok) API for Settings → LLMs. Install from Store → Gateways, then enable to show SpaceXAI under Providers & Keys.",
   "min_app_version": "1.0.523",
