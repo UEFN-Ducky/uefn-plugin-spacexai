@@ -120,11 +120,12 @@ def publish(zip_path: Path, *, category: str, changelog: str) -> None:
             "changelog": changelog or "v1.0.0: SpaceXAI (Grok) LLM gateway",
             "publish": True,
             "categories": ["plugins", "gateways"],
-            "tags": ["spacexai", "xai", "grok", "llm", "gateway", "api-key"],
+            "tags": ["spacexai", "xai", "grok", "grok-build", "llm", "gateway", "api-key"],
             "name": "SpaceXAI",
             "description": (
-                "SpaceXAI (Grok) API. After Install + Enable, SpaceXAI appears under "
-                "Settings → LLMs → Providers & Keys. Paste your API key from console.x.ai."
+                "SpaceXAI (Grok) API key + Grok Build coding agent. After Install + Enable, "
+                "SpaceXAI appears under Settings → LLMs → Providers & Keys, and Grok Build "
+                "under Coding Agents."
             ),
             "zipB64": zip_b64,
         },
