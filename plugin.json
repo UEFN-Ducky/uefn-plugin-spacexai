@@ -1,9 +1,9 @@
 {
   "id": "spacexai",
   "kind": "plugin",
-  "version": "1.0.8",
+  "version": "1.2.0",
   "label": "SpaceXAI",
-  "description": "SpaceXAI (Grok) API for Settings → LLMs. Install from Store → Gateways, then enable to show SpaceXAI under Providers & Keys.",
+  "description": "SpaceXAI (Grok) API key + Grok Build coding agent for Settings → LLMs. Install from Store → Gateways, then enable to show SpaceXAI under Providers & Keys and Grok Build under Coding Agents.",
   "min_app_version": "1.0.523",
   "default_enabled": true,
   "secret_keys": [
@@ -19,6 +19,13 @@
         "order": 42
       }
     ],
+    "llm.coding_agents": [
+      {
+        "id": "grok_build",
+        "label": "Grok Build",
+        "order": 140
+      }
+    ],
     "walkthrough": {
       "id": "spacexai",
       "title": "Set up SpaceXAI",
@@ -28,22 +35,36 @@
         {
           "target": "settings.llms.provider.spacexai",
           "title": "Open SpaceXAI",
-          "body": "Press the SpaceXAI row in this table. The page slides open so you can paste your API key.",
+          "body": "Press the SpaceXAI row in this table. The page slides open so you can paste your API key or use Grok Build.",
           "advance": "require_click",
           "mode": "rect"
         },
         {
           "target": "settings.llms.provider.key",
-          "title": "API key",
-          "body": "Paste your API key from console.x.ai.",
+          "title": "API key or Grok login",
+          "body": "Paste your API key from console.x.ai. No key? Skip this and use Grok Build on this same slide after `grok login`.",
           "advance": "next",
           "mode": "rect"
         },
         {
           "target": "settings.llms.provider.save",
           "title": "Test & Save",
-          "body": "Press Test & Save after you paste a key.",
+          "body": "Press Test & Save after you paste a key. Using Grok Build without a key? Press Skip.",
           "advance": "require_click",
+          "mode": "rect"
+        },
+        {
+          "target": "settings.llms.provider.agent",
+          "title": "Grok Build",
+          "body": "Grok Build is the official Grok coding agent. Detect finds the `grok` CLI. Keep it on to pick Grok Build in chat.",
+          "advance": "next",
+          "mode": "rect"
+        },
+        {
+          "target": "settings.llms.provider.agent.detect",
+          "title": "Detect CLI",
+          "body": "Press Detect to find `grok` on this machine. Leave the toggle on so it appears in the chat picker.",
+          "advance": "next",
           "mode": "rect"
         },
         {
