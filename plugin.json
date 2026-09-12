@@ -1,10 +1,10 @@
 {
   "id": "spacexai",
   "kind": "plugin",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "label": "SpaceXAI",
   "description": "SpaceXAI (Grok) API key + Grok Build coding agent for Settings → LLMs. Install from Store → Gateways, then enable to show SpaceXAI under Providers & Keys and Grok Build under Coding Agents.",
-  "min_app_version": "1.0.523",
+  "min_app_version": "1.2.45",
   "default_enabled": true,
   "secret_keys": [
     "spacexai"

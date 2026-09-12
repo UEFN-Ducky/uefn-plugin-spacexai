@@ -34,12 +34,15 @@ def _info_from_id(model_id: str) -> ModelInfo:
     mid = model_id.strip()
     lower = mid.lower()
     vision = "vision" in lower or "image" in lower or "imagine" in lower
+    from .spacexai_provider import grok_supports_reasoning_effort
+
     return ModelInfo(
         id=mid,
         display_name=mid,
         supports_vision=vision,
         supports_tools=True,
         context_limit=None,
+        supports_thinking_effort=grok_supports_reasoning_effort(mid),
     )
 
 

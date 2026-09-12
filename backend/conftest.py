@@ -55,6 +55,7 @@ class ModelInfo:
     supports_vision: bool = False
     supports_tools: bool = False
     context_limit: int | None = None
+    supports_thinking_effort: bool | None = None
 
 
 @dataclass
@@ -173,6 +174,14 @@ def _install_host_stubs() -> None:
     _module(
         "backend.agent.multimodal_content",
         build_openai_user_content=lambda text, attachments: text,
+    )
+    _module(
+        "backend.agent.thinking_effort",
+        normalize_thinking_effort=lambda value: (
+            v
+            if (v := (value or "").strip().lower()) in {"low", "medium", "high"}
+            else "off"
+        ),
     )
     _module(
         "backend.agent.secrets", get_key=lambda name: "", has_key=lambda name: False

@@ -15,14 +15,31 @@ from backend.agent.providers.base import (
 )
 from backend.agent.providers.cache_utils import openai_system_messages, parse_openai_usage
 from backend.agent.providers.thinking import ThinkSplitter, reasoning_from_delta
+from backend.agent.thinking_effort import normalize_thinking_effort
 
 SPACEXAI_BASE_URL = "https://api.x.ai/v1"
 
 
+def grok_supports_reasoning_effort(model: str) -> bool:
+    mid = (model or "").strip().lower()
+    return any(tag in mid for tag in ("grok-4.3", "grok-4.5", "grok-4.6", "grok-4.20"))
+
+
+def grok_reasoning_effort(model: str, thinking_effort: str) -> str | None:
+    if not grok_supports_reasoning_effort(model):
+        return None
+    mid = (model or "").strip().lower()
+    effort = normalize_thinking_effort(thinking_effort)
+    if effort == "off":
+        return "none" if "grok-4.3" in mid else None
+    return effort
+
+
 class SpaceXAIProvider:
-    def __init__(self, api_key: str, model: str) -> None:
+    def __init__(self, api_key: str, model: str, *, thinking_effort: str = "off", **_kw: Any) -> None:
         self._api_key = api_key
         self._model = model
+        self._thinking_effort = normalize_thinking_effort(thinking_effort)
 
     def _client(self):
         from openai import OpenAI
@@ -98,6 +115,9 @@ class SpaceXAIProvider:
         cache_key = (cache.prompt_cache_key if cache else "") or ""
         if cache_key:
             create_kwargs["prompt_cache_key"] = cache_key
+        effort = grok_reasoning_effort(self._model, self._thinking_effort)
+        if effort:
+            create_kwargs["reasoning_effort"] = effort
 
         stream = client.chat.completions.create(**create_kwargs)
         for chunk in stream:

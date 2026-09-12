@@ -56,6 +56,7 @@ def register(api) -> None:
         test_key_model="grok-4.5",
         tool_schema="openai",
         clear_model_cache=clear_model_cache,
+        shows_thinking_effort=True,
     )
     api.register_coding_agent(
         "grok_build",
