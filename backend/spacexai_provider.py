@@ -25,6 +25,23 @@ def grok_supports_reasoning_effort(model: str) -> bool:
     return any(tag in mid for tag in ("grok-4.3", "grok-4.5", "grok-4.6", "grok-4.20"))
 
 
+def thinking_menu(model: str) -> dict | None:
+    if not grok_supports_reasoning_effort(model):
+        return None
+    mid = (model or "").strip().lower()
+    off_hint = "reasoning_effort=none" if "grok-4.3" in mid else "No extended thinking"
+    return {
+        "lo": "Faster",
+        "hi": "Smarter",
+        "levels": [
+            {"id": "off", "label": "Off", "thinking_tokens": 0, "hint": off_hint},
+            {"id": "low", "label": "Low", "thinking_tokens": None, "hint": "reasoning_effort=low, no token cap"},
+            {"id": "medium", "label": "Med", "thinking_tokens": None, "hint": "reasoning_effort=medium, no token cap"},
+            {"id": "high", "label": "High", "thinking_tokens": None, "hint": "reasoning_effort=high, no token cap"},
+        ],
+    }
+
+
 def grok_reasoning_effort(model: str, thinking_effort: str) -> str | None:
     if not grok_supports_reasoning_effort(model):
         return None

@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import logging
 import time
+from dataclasses import fields
 from typing import Any
 
 from backend.agent.model_fetch import ModelInfo, _cache_put
@@ -14,6 +15,12 @@ from .spacexai_provider import SPACEXAI_BASE_URL
 _log = logging.getLogger(__name__)
 _CACHE_MAX = 512
 _CACHE_TTL_S = 6 * 3600.0
+_MODEL_INFO_FIELDS = {f.name for f in fields(ModelInfo)}
+
+
+def _model_info(**kw: Any) -> ModelInfo:
+    """Drop unknown fields so an older host ModelInfo does not TypeError."""
+    return ModelInfo(**{k: v for k, v in kw.items() if k in _MODEL_INFO_FIELDS})
 
 _SPACEXAI_MODELS_CACHE: dict[str, tuple[float, list[ModelInfo]]] = {}
 
@@ -34,15 +41,16 @@ def _info_from_id(model_id: str) -> ModelInfo:
     mid = model_id.strip()
     lower = mid.lower()
     vision = "vision" in lower or "image" in lower or "imagine" in lower
-    from .spacexai_provider import grok_supports_reasoning_effort
+    from .spacexai_provider import grok_supports_reasoning_effort, thinking_menu
 
-    return ModelInfo(
+    return _model_info(
         id=mid,
         display_name=mid,
         supports_vision=vision,
         supports_tools=True,
         context_limit=None,
         supports_thinking_effort=grok_supports_reasoning_effort(mid),
+        thinking_menu=thinking_menu(mid),
     )
 
 

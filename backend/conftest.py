@@ -56,6 +56,7 @@ class ModelInfo:
     supports_tools: bool = False
     context_limit: int | None = None
     supports_thinking_effort: bool | None = None
+    thinking_menu: dict | None = None
 
 
 @dataclass
@@ -178,9 +179,9 @@ def _install_host_stubs() -> None:
     _module(
         "backend.agent.thinking_effort",
         normalize_thinking_effort=lambda value: (
-            v
-            if (v := (value or "").strip().lower()) in {"low", "medium", "high"}
-            else "off"
+            "off"
+            if (v := (value or "").strip().lower()) in {"", "off", "none", "0"}
+            else v
         ),
     )
     _module(

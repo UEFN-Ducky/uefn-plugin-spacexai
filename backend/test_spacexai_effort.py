@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from backend.spacexai_provider import grok_reasoning_effort, grok_supports_reasoning_effort
+from backend.spacexai_provider import grok_reasoning_effort, grok_supports_reasoning_effort, thinking_menu
 
 
 def test_grok_reasoning_effort() -> None:
@@ -12,6 +12,8 @@ def test_grok_reasoning_effort() -> None:
     assert grok_reasoning_effort("grok-4.5", "off") is None
     assert grok_reasoning_effort("grok-4.6", "high") == "high"
     assert grok_reasoning_effort("grok-4", "high") is None
+    assert thinking_menu("grok-4") is None
+    assert thinking_menu("grok-4.3")["levels"][0]["thinking_tokens"] == 0
 
 
 if __name__ == "__main__":
