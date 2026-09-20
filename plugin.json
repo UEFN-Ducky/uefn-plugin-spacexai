@@ -1,9 +1,9 @@
 {
   "id": "spacexai",
   "kind": "plugin",
-  "version": "1.2.3",
+  "version": "1.2.4",
   "label": "SpaceXAI",
-  "description": "SpaceXAI (Grok) API key + Grok Build coding agent for Settings → LLMs. Install from Store → Gateways, then enable to show SpaceXAI under Providers & Keys and Grok Build under Coding Agents.",
+  "description": "SpaceXAI (Grok) API key + Grok Build coding agent for Settings \u2192 LLMs. Install from Store \u2192 Gateways, then enable to show SpaceXAI under Providers & Keys and Grok Build under Coding Agents.",
   "min_app_version": "1.2.45",
   "default_enabled": true,
   "secret_keys": [
@@ -73,6 +73,83 @@
           "body": "Press Back to return to the provider list.",
           "advance": "require_click",
           "mode": "rect"
+        }
+      ]
+    },
+    "automations": {
+      "nodes": [
+        {
+          "id": "spacexai.complete",
+          "label": "SpaceXAI complete",
+          "group": "SpaceXAI",
+          "description": "One-shot prompt through the SpaceXAI gateway. Writes text onto the run.",
+          "config_fields": [
+            {
+              "id": "prompt",
+              "label": "Prompt",
+              "type": "textarea"
+            },
+            {
+              "id": "model",
+              "label": "Model",
+              "type": "model",
+              "provider": "spacexai"
+            }
+          ]
+        }
+      ],
+      "templates": [
+        {
+          "id": "spacexai-complete",
+          "label": "SpaceXAI complete",
+          "icon": "\u2728",
+          "systems": [
+            "pipeline"
+          ],
+          "description": "Chat prompt through SpaceXAI, then finish.",
+          "graph": {
+            "nodes": [
+              {
+                "id": "s",
+                "type": "start.chat",
+                "x": 40,
+                "y": 80,
+                "config": {},
+                "label": "Chat",
+                "description": ""
+              },
+              {
+                "id": "c",
+                "type": "spacexai.complete",
+                "x": 280,
+                "y": 80,
+                "config": {},
+                "label": "Complete",
+                "description": ""
+              },
+              {
+                "id": "f",
+                "type": "pipeline.finish",
+                "x": 520,
+                "y": 80,
+                "config": {},
+                "label": "Finish",
+                "description": ""
+              }
+            ],
+            "edges": [
+              {
+                "source": "s",
+                "target": "c",
+                "kind": "main"
+              },
+              {
+                "source": "c",
+                "target": "f",
+                "kind": "main"
+              }
+            ]
+          }
         }
       ]
     }

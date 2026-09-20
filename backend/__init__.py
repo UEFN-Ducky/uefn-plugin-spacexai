@@ -83,4 +83,7 @@ def register(api) -> None:
         token_provider="spacexai",
         shows_thinking_effort=True,
     )
+    from . import graph_nodes
+
+    graph_nodes.register_nodes(api)
     api.log("SpaceXAI gateway contribution active (Providers + Grok Build)")
