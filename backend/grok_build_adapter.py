@@ -397,6 +397,33 @@ class _AcpStream:
             self._finish_tool(entry, failed=True)
 
 
+def _option_for_added_project(params: dict[str, Any]) -> str:
+    """allow_always when the tool names a project from the header dropdown."""
+    try:
+        from frontend.ui_web.recent_projects import load_recent_projects
+
+        roots = [str(Path(p).resolve()) for p in load_recent_projects() if Path(p).is_dir()]
+    except Exception:
+        return ""
+    if not roots:
+        return ""
+    try:
+        blob = json.dumps(params.get("toolCall") or {}, ensure_ascii=False)
+    except (TypeError, ValueError):
+        blob = str(params.get("toolCall") or "")
+    folded = blob.replace("\\\\", "\\").lower()
+    if not any(root.lower() in folded or root.replace("\\", "/").lower() in folded for root in roots):
+        return ""
+    options = params.get("options")
+    if not isinstance(options, list):
+        return ""
+    for kind in ("allow_always", "allow_once"):
+        for option in options:
+            if isinstance(option, dict) and str(option.get("kind") or "") == kind:
+                return str(option.get("optionId") or "")
+    return ""
+
+
 class _PermissionBroker:
     def __init__(
         self,
@@ -441,6 +468,9 @@ class _PermissionBroker:
             )
         if not rendered:
             return {"outcome": {"outcome": "cancelled"}}
+        granted = _option_for_added_project(params)
+        if granted and granted in valid:
+            return {"outcome": {"outcome": "selected", "optionId": granted}}
         tool = params.get("toolCall")
         if not isinstance(tool, dict):
             tool = {}

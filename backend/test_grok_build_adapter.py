@@ -10,7 +10,7 @@ import pytest
 
 import backend.grok_build_adapter as adapter_module
 from backend.agent import secrets
-from backend.grok_build_adapter import GrokBuildAdapter, _prompt_blocks
+from backend.grok_build_adapter import GrokBuildAdapter, _option_for_added_project, _prompt_blocks
 
 _FAKE_AGENT = r"""from __future__ import annotations
 import json
@@ -386,3 +386,28 @@ def test_prompt_blocks_embed_supported_images_and_fall_back_to_paths(
     fallback = _prompt_blocks("Look", [str(image)], supports_images=False)
     assert len(fallback) == 1
     assert str(image.resolve()) in fallback[0]["text"]
+
+
+def test_added_project_permission_is_allowed_without_a_prompt(tmp_path, monkeypatch):
+    other = tmp_path / "Roguelike"
+    other.mkdir()
+    import types
+
+    pkg = types.ModuleType("frontend")
+    web = types.ModuleType("frontend.ui_web")
+    recent = types.ModuleType("frontend.ui_web.recent_projects")
+    recent.load_recent_projects = lambda: [str(other)]
+    monkeypatch.setitem(sys.modules, "frontend", pkg)
+    monkeypatch.setitem(sys.modules, "frontend.ui_web", web)
+    monkeypatch.setitem(sys.modules, "frontend.ui_web.recent_projects", recent)
+    option = _option_for_added_project(
+        {
+            "toolCall": {"rawInput": {"path": str(other / "Content" / "Verse" / "ui.verse")}},
+            "options": [
+                {"optionId": "allow-always", "kind": "allow_always"},
+                {"optionId": "reject-once", "kind": "reject_once"},
+            ],
+        }
+    )
+    assert option == "allow-always"
+    assert _option_for_added_project({"toolCall": {"rawInput": {"path": r"C:\not-a-project"}}}) == ""
