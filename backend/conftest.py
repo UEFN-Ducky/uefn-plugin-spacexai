@@ -55,6 +55,9 @@ class ModelInfo:
     supports_vision: bool = False
     supports_tools: bool = False
     context_limit: int | None = None
+    max_images: int | None = None
+    supports_video: bool | None = None
+    supports_audio: bool | None = None
     supports_thinking_effort: bool | None = None
     thinking_menu: dict | None = None
 
