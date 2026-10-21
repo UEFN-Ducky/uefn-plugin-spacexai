@@ -6,6 +6,7 @@
   "description": "SpaceXAI (Grok) API key + Grok Build coding agent for Settings \u2192 LLMs. Install from Store \u2192 Gateways, then enable to show SpaceXAI under Providers & Keys and Grok Build under Coding Agents.",
   "min_app_version": "1.2.45",
   "default_enabled": true,
+  "data_sharing": false,
   "secret_keys": [
     "spacexai"
   ],
