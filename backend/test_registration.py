@@ -39,3 +39,47 @@ def test_registers_provider_and_grok_build_agent() -> None:
         "DUCKY_GROK_REASONING_EFFORT": "high"
     }
     assert any("Grok Build" in message for message in api.logs)
+
+
+def test_account_hooks_are_registered() -> None:
+    api = _Api()
+    register(api)
+    agent = api.agents["grok_build"]
+    for hook in ("account_env", "account_login", "account_status", "account_logout", "is_limit_error"):
+        assert callable(agent[hook]), hook
+    assert api.providers["spacexai"]["is_quota_error"]("429 Too Many Requests")
+
+
+def test_login_account_is_its_own_grok_home(tmp_path) -> None:
+    from backend.grok_build_adapter import account_env, account_logout, account_status
+
+    home = tmp_path / "acc2"
+    assert account_env(str(home)) == {"GROK_HOME": str(home)}
+    assert account_status(str(home)) == {"loggedIn": False}
+    (home / "auth.json").write_text('{"email": "a@x.ai"}', encoding="utf-8")
+    assert account_status(str(home)) == {"loggedIn": True, "email": "a@x.ai"}
+    account_logout(str(home))
+    assert account_status(str(home))["loggedIn"] is False
+
+
+def test_key_b_is_used_after_key_a_hits_429(monkeypatch) -> None:
+    import sys
+    import types
+
+    import backend.agent as agent_pkg
+    from backend import grok_build_adapter as gba
+
+    exhausted: set[str] = set()
+    fake = types.SimpleNamespace(
+        pick_account=lambda p: "b" if "a" in exhausted else "a",
+        account_key=lambda p, a: f"KEY-{a}",
+        mark_exhausted=lambda p, a, until=None: exhausted.add(a),
+    )
+    monkeypatch.setattr(agent_pkg, "accounts", fake, raising=False)
+    monkeypatch.setitem(sys.modules, "backend.agent.accounts", fake)
+
+    assert gba.pick_xai_key({}) == ("a", "KEY-a")
+    gba.note_key_limit("a", "Error: 429 Too Many Requests")
+    assert gba.pick_xai_key({}) == ("b", "KEY-b")
+    assert gba.pick_xai_key({"GROK_HOME": "x"}) == ("", "")
+    assert not gba.is_limit_error("Context window full")

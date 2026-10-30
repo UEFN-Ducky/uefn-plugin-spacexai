@@ -5,6 +5,7 @@ from __future__ import annotations
 import base64
 import json
 import mimetypes
+import re
 import threading
 import time
 from collections.abc import Callable
@@ -72,6 +73,103 @@ _CLI_MODELS: tuple[dict[str, str], ...] = (
 
 class _NeedsLogin(AcpError):
     pass
+
+
+# ── accounts ────────────────────────────────────────────────────────────
+# A login account is its own Grok config folder (``GROK_HOME``, else ``~/.grok``).
+# ponytail: GROK_HOME is the CLI's assumed override; switch to HOME/USERPROFILE if a CLI
+# release ignores it (that also moves git/npm config for the agent's shell, so not by default).
+
+HOME_ENV = "GROK_HOME"
+SHARED_DIRS = ("skills", "commands", "agents")
+SHARED_FILES = ("settings.json", "config.toml", "GROK.md")
+_CREDS = ("auth.json", "credentials.json", "cached_token.json")
+
+
+def account_env(config_dir: str) -> dict[str, str]:
+    folder = Path(config_dir)
+    folder.mkdir(parents=True, exist_ok=True)
+    try:
+        from backend.agent.accounts import share_config
+
+        share_config(Path.home() / ".grok", folder, SHARED_DIRS, SHARED_FILES)
+    except Exception:
+        pass  # older core without accounts.py: the login still works unshared
+    return {HOME_ENV: str(folder)}
+
+
+def account_login(config_dir: str) -> dict[str, Any]:
+    return {"argv": [which_cli("grok", "") or "grok", "login"], "env": account_env(config_dir)}
+
+
+def account_status(config_dir: str) -> dict[str, Any]:
+    for name in _CREDS:
+        path = Path(config_dir) / name
+        if not path.is_file():
+            continue
+        status: dict[str, Any] = {"loggedIn": True}
+        try:
+            email = json.loads(path.read_text(encoding="utf-8")).get("email")
+            if isinstance(email, str) and email:
+                status["email"] = email
+        except Exception:
+            pass
+        return status
+    return {"loggedIn": False}
+
+
+def account_logout(config_dir: str) -> None:
+    for name in _CREDS:
+        try:
+            (Path(config_dir) / name).unlink()
+        except OSError:
+            pass
+
+
+# xAI: "429 Too Many Requests", "rate limit exceeded", "You have run out of credits",
+# "spending limit reached", "usage limit reached".
+_LIMIT_RE = re.compile(
+    r"\b429\b|too many requests|rate[_ ]limit|insufficient[_ ]quota|quota exceeded"
+    r"|out of credits|(?:spending|usage|monthly) limit reached",
+    re.I,
+)
+
+
+def is_limit_error(text: str) -> bool:
+    return isinstance(text, str) and bool(_LIMIT_RE.search(text))
+
+
+def pick_xai_key(env: dict[str, str]) -> tuple[str, str]:
+    """(key account id, key) for this turn; ``("", "")`` when a login account or a key is already set."""
+    if env.get("XAI_API_KEY") or env.get(HOME_ENV):
+        return "", ""
+    try:
+        from backend.agent import accounts
+
+        acc = accounts.pick_account("spacexai")
+        key = (accounts.account_key("spacexai", acc) or "").strip()
+        if key:
+            return acc, key
+    except Exception:
+        pass
+    try:
+        from backend.agent.secrets import get_key
+
+        return "default", str(get_key("spacexai") or "").strip()
+    except Exception:  # noqa: BLE001 - plugin may load before the host secrets service
+        return "", ""
+
+
+def note_key_limit(account_id: str, *texts: Any) -> None:
+    """A turn on this key hit its limit: the next turn moves to the next key."""
+    if not account_id or not any(is_limit_error(t) for t in texts if t):
+        return
+    try:
+        from backend.agent.accounts import mark_exhausted
+
+        mark_exhausted("spacexai", account_id)
+    except Exception:
+        pass
 
 
 def _missing_status() -> str:
@@ -645,14 +743,10 @@ class GrokBuildAdapter:
 
         child_env = dict(env or {})
         effort = str(child_env.pop(_EFFORT_ENV, "") or "").strip().lower()
-        try:
-            from backend.agent.secrets import get_key
-
-            api_key = str(get_key("spacexai") or "").strip()
-        except Exception:  # noqa: BLE001 - plugin may load before the host secrets service
-            api_key = ""
+        key_account, api_key = pick_xai_key(child_env)
         if api_key:
             child_env["XAI_API_KEY"] = api_key
+        api_key = str(child_env.get("XAI_API_KEY") or "")  # redacted from errors either way
 
         try:
             mcp_servers = load_mcp_servers(mcp_config_path)
@@ -688,6 +782,7 @@ class GrokBuildAdapter:
             low = message.lower()
             if session_id and any(marker in low for marker in _STALE_SESSION_MARKERS):
                 new_session_id = ""
+            note_key_limit(key_account, message, client.stderr_tail)
             if any(marker in low for marker in _LOGIN_MARKERS):
                 status = "needs_login"
                 message += (
