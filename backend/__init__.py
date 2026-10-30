@@ -51,6 +51,7 @@ def _resolve_api_fallback(model_id: str) -> tuple[str, str] | None:
 
 
 def register(api) -> None:
+    from . import grok_build_adapter as gba
     from .grok_build_adapter import GrokBuildAdapter
     from .model_fetch import clear_model_cache
     from .spacexai_provider import SpaceXAIProvider
@@ -64,6 +65,7 @@ def register(api) -> None:
         tool_schema="openai",
         clear_model_cache=clear_model_cache,
         shows_thinking_effort=True,
+        is_quota_error=gba.is_limit_error,
     )
     api.register_coding_agent(
         "grok_build",
@@ -82,6 +84,11 @@ def register(api) -> None:
         install_help=_INSTALL_HELP,
         token_provider="spacexai",
         shows_thinking_effort=True,
+        account_env=gba.account_env,
+        account_login=gba.account_login,
+        account_status=gba.account_status,
+        account_logout=gba.account_logout,
+        is_limit_error=gba.is_limit_error,
     )
     from . import graph_nodes
 
