@@ -16,11 +16,11 @@ from backend.agent.coding_agents.base import (
     CodingAgentCapabilities,
     CodingAgentInfo,
     CodingAgentLaunchResult,
-    which_cli,
 )
 from backend.agent.coding_agents.cli_shared import truncate_tool_result
 from backend.agent.coding_agents.settings_helpers import coding_agent_cfg
 
+from .grok_login import grok_bin, grok_home, login_state, start_browser_login
 from .grok_acp import (
     ACP_PROTOCOL_VERSION,
     AcpCancelled,
@@ -35,7 +35,6 @@ from .grok_acp import (
     validate_mcp_capabilities,
 )
 
-_GROK_INSTALL_PS = r"irm https://x.ai/cli/install.ps1 | iex"
 _EFFORT_ENV = "DUCKY_GROK_REASONING_EFFORT"
 _PLUGIN_VERSION = "1.2.0"
 _HANDSHAKE_TIMEOUT_S = 60.0
@@ -86,7 +85,9 @@ SHARED_FILES = ("settings.json", "config.toml", "GROK.md")
 _CREDS = ("auth.json", "credentials.json", "cached_token.json")
 
 
-def account_env(config_dir: str) -> dict[str, str]:
+def account_env(config_dir: str | None) -> dict[str, str]:
+    if not config_dir:
+        return {}  # the default account: Grok's own ~/.grok
     folder = Path(config_dir)
     folder.mkdir(parents=True, exist_ok=True)
     try:
@@ -98,13 +99,22 @@ def account_env(config_dir: str) -> dict[str, str]:
     return {HOME_ENV: str(folder)}
 
 
-def account_login(config_dir: str) -> dict[str, Any]:
-    return {"argv": [which_cli("grok", "") or "grok", "login"], "env": account_env(config_dir)}
+def account_login(config_dir: str | None) -> dict[str, Any]:
+    """Terminal fallback for cores without account_browser_login."""
+    return {"argv": [grok_bin() or "grok", "login"], "env": account_env(config_dir)}
 
 
-def account_status(config_dir: str) -> dict[str, Any]:
+def account_browser_login(config_dir: str | None) -> dict[str, Any]:
+    """Settings' Log in: one click, the browser opens (installs Grok first when missing)."""
+    return start_browser_login(config_dir, account_env(config_dir))
+
+
+def account_status(config_dir: str | None) -> dict[str, Any]:
+    state = login_state(config_dir)
+    if state.get("pending"):
+        return {"loggedIn": False, **state}
     for name in _CREDS:
-        path = Path(config_dir) / name
+        path = grok_home(config_dir) / name
         if not path.is_file():
             continue
         status: dict[str, Any] = {"loggedIn": True}
@@ -115,13 +125,13 @@ def account_status(config_dir: str) -> dict[str, Any]:
         except Exception:
             pass
         return status
-    return {"loggedIn": False}
+    return {"loggedIn": False, **state}
 
 
-def account_logout(config_dir: str) -> None:
+def account_logout(config_dir: str | None) -> None:
     for name in _CREDS:
         try:
-            (Path(config_dir) / name).unlink()
+            (grok_home(config_dir) / name).unlink()
         except OSError:
             pass
 
@@ -174,8 +184,8 @@ def note_key_limit(account_id: str, *texts: Any) -> None:
 
 def _missing_status() -> str:
     return (
-        "Grok Build CLI not found — install the official `grok` command in Windows "
-        f"PowerShell: {_GROK_INSTALL_PS}. Then run `grok login`, restart Ducky, and click Detect."
+        "Grok Build isn't installed yet. Open Settings → LLMs → SpaceXAI and press Log in: "
+        "Ducky installs it and opens the sign-in."
     )
 
 
@@ -701,7 +711,7 @@ class GrokBuildAdapter:
         cfg = coding_agent_cfg(settings, self.id)
         enabled = bool(cfg.get("enabled", True))
         override = str(cfg.get("cli_path") or "")
-        path = which_cli("grok", override)
+        path = grok_bin(override)
         default_args = str(cfg.get("default_args") or "")
         return CodingAgentInfo(
             id=self.id,
@@ -735,7 +745,7 @@ class GrokBuildAdapter:
         image_paths: list[str] | None = None,
     ) -> CodingAgentLaunchResult:
         selected_model = (model or "default").strip() or "default"
-        binary = which_cli("grok", cli_path)
+        binary = grok_bin(cli_path)
         if not binary:
             return CodingAgentLaunchResult(
                 ok=False, error=_missing_status(), status="error"

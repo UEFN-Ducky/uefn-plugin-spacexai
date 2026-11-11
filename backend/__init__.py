@@ -6,9 +6,8 @@ from pathlib import Path
 from typing import Any
 
 _INSTALL_HELP = (
-    "Needs the official Grok Build CLI (`grok` in PowerShell). Install in Windows "
-    "PowerShell: irm https://x.ai/cli/install.ps1 | iex. Then run `grok login`, "
-    "or save a SpaceXAI API key in Ducky. Restart Ducky and click Detect."
+    "Press Log in under SpaceXAI: Ducky installs Grok Build and opens the sign-in in your "
+    "browser. Or save a SpaceXAI API key."
 )
 
 
@@ -86,6 +85,7 @@ def register(api) -> None:
         shows_thinking_effort=True,
         account_env=gba.account_env,
         account_login=gba.account_login,
+        account_browser_login=gba.account_browser_login,
         account_status=gba.account_status,
         account_logout=gba.account_logout,
         is_limit_error=gba.is_limit_error,
